@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id uuid PRIMARY KEY,
     username VARCHAR(32) NOT NULL UNIQUE,
-    password VARCHAR(32) NOT NULL,
+    password text NOT NULL,
     profile_img text NOT NULL,
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW()
