@@ -25,14 +25,19 @@ func GameRouter() chi.Router {
 
 func (h GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	payload := []entity.Game{}
-	for _, model := range model.SelectGames() {
+	games, err := model.SelectGames()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	for _, model := range games {
 		payload = append(payload, entity.Game{
-			Id:                     model.Id,
-			Title:                  model.Title,
-			MaxPlayers:             model.MaxPlayers,
-			CurrentRound:           model.CurrentRound,
-			MaxRounds:              model.MaxRounds,
-			CurrentLeadingPlayerId: model.CurrentLeadingPlayerId,
+			Id:           model.Id,
+			Title:        model.Title,
+			MaxPlayers:   model.MaxPlayers,
+			CurrentRound: model.CurrentRound,
+			MaxRound:     model.MaxRound,
 		})
 	}
 
@@ -53,7 +58,7 @@ func (h GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	model.InsertGame(
 		game.Title,
 		game.MaxPlayers,
-		game.MaxRounds,
+		game.MaxRound,
 		uuid.NewString(),
 	)
 }
