@@ -1,72 +1,66 @@
 package model
 
 import (
-	"slices"
+	"context"
+	"fmt"
+	"log"
+	"time"
 
 	"github.com/google/uuid"
-)
-
-var (
-	games []Game = []Game{
-		{
-			Id:                     "gipoujqaowiugjopaiwejf",
-			Title:                  "Game 1",
-			MaxPlayers:             8,
-			CurrentRound:           0,
-			MaxRounds:              5,
-			CurrentLeadingPlayerId: "gjiwropqgjiwergjwei",
-		},
-		{
-			Id:                     "gipoujqaowiugjopaiwgawergejf",
-			Title:                  "Game 2",
-			MaxPlayers:             3,
-			CurrentRound:           0,
-			MaxRounds:              5,
-			CurrentLeadingPlayerId: "gjiwropqgjiwergjwei",
-		},
-		{
-			Id:                     "gipoujahwhwehwehwerhqaowiugjopaiwejf",
-			Title:                  "Game 3",
-			MaxPlayers:             10,
-			CurrentRound:           0,
-			MaxRounds:              5,
-			CurrentLeadingPlayerId: "gjiwropqgjiwergjwei",
-		},
-	}
+	"github.com/lardira/wicked-wit/internal/db"
 )
 
 type Game struct {
-	Id                     string
-	Title                  string
-	MaxPlayers             uint
-	CurrentRound           uint
-	MaxRounds              uint
-	CurrentLeadingPlayerId string
+	Id           string
+	Title        string
+	MaxPlayers   uint
+	CurrentRound uint
+	MaxRound     uint
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
-func SelectGames() []Game {
-	return games
-}
+func SelectGames() ([]Game, error) {
+	output := make([]Game, 0)
 
-func InsertGame(title string, maxPlayers uint, maxRounds uint, currentLeadingPlayerId string) (string, error) {
-	newGame := Game{
-		Id:                     uuid.NewString(),
-		Title:                  title,
-		MaxPlayers:             maxPlayers,
-		MaxRounds:              maxRounds,
-		CurrentLeadingPlayerId: currentLeadingPlayerId,
+	query := "SELECT id, title, max_players, max_round, current_round, created_at, updated_at FROM game"
+	rows, err := db.Conn.Query(context.Background(), query)
+	if err != nil {
+		return output, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var g Game
+		err := rows.Scan(
+			&g.Id,
+			&g.Title,
+			&g.MaxPlayers,
+			&g.MaxRound,
+			&g.CurrentRound,
+			&g.CreatedAt,
+			&g.UpdatedAt,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		output = append(output, g)
 	}
 
-	games = append(games, newGame)
+	return output, nil
+}
+
+func InsertGame(title string, maxPlayers uint, maxRound uint, currentLeadingPlayerId string) (string, error) {
+	newGame := Game{
+		Id:         uuid.NewString(),
+		Title:      title,
+		MaxPlayers: maxPlayers,
+		MaxRound:   maxRound,
+	}
 
 	return newGame.Id, nil
 }
 
 func DeleteGame(id string) {
-	for i, g := range games {
-		if g.Id == id {
-			games = slices.Delete(games, i, i+1)
-			return
-		}
-	}
+	fmt.Println("TODO: DELETE GAME")
 }
