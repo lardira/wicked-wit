@@ -31,13 +31,19 @@ func (h GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, model := range games {
-		payload = append(payload, entity.Game{
-			Id:           model.Id,
-			Title:        model.Title,
-			MaxPlayers:   model.MaxPlayers,
-			CurrentRound: model.CurrentRound,
-			MaxRound:     model.MaxRound,
-		})
+		game := entity.Game{
+			Id:         model.Id,
+			Title:      model.Title,
+			MaxPlayers: model.MaxPlayers,
+			MaxRound:   model.MaxRound,
+		}
+
+		if model.CurrentRound.Valid {
+			round := uint(model.CurrentRound.Int64)
+			game.CurrentRound = &round
+		}
+
+		payload = append(payload, game)
 	}
 
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
@@ -54,11 +60,17 @@ func (h GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model.InsertGame(
+	newId, err := model.InsertGame(
 		game.Title,
 		game.MaxPlayers,
 		game.MaxRound,
 	)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	entity.SimpleData(w, newId)
 }
 
 func (h GameHandler) DeleteGame(w http.ResponseWriter, r *http.Request) {

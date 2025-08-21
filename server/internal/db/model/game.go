@@ -2,11 +2,12 @@ package model
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
 )
 
@@ -14,7 +15,7 @@ type Game struct {
 	Id           string
 	Title        string
 	MaxPlayers   uint
-	CurrentRound uint
+	CurrentRound sql.NullInt64
 	MaxRound     uint
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -51,16 +52,32 @@ func SelectGames() ([]Game, error) {
 }
 
 func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
-	newGame := Game{
-		Id:         uuid.NewString(),
-		Title:      title,
-		MaxPlayers: maxPlayers,
-		MaxRound:   maxRound,
+	newGameId := uuid.NewString()
+
+	query := `INSERT INTO game 
+		(id, title, max_players, max_round)
+		VALUES (@id, @title, @max_players, @max_round)`
+
+	args := pgx.NamedArgs{
+		"id":          newGameId,
+		"title":       title,
+		"max_players": maxPlayers,
+		"max_round":   maxRound,
 	}
 
-	return newGame.Id, nil
+	_, err := db.Conn.Exec(
+		context.Background(),
+		query,
+		args,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return newGameId, nil
 }
 
 func DeleteGame(id string) {
-	fmt.Println("TODO: DELETE GAME")
+	query := "DELETE FROM game WHERE id = $1"
+	db.Conn.Exec(context.Background(), query, id)
 }
