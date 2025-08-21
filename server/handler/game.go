@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/lardira/wicked-wit/entity"
 	"github.com/lardira/wicked-wit/internal/db/model"
 )
@@ -59,7 +58,6 @@ func (h GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		game.Title,
 		game.MaxPlayers,
 		game.MaxRound,
-		uuid.NewString(),
 	)
 }
 

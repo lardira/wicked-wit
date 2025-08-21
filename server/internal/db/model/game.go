@@ -50,7 +50,7 @@ func SelectGames() ([]Game, error) {
 	return output, nil
 }
 
-func InsertGame(title string, maxPlayers uint, maxRound uint, currentLeadingPlayerId string) (string, error) {
+func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
 	newGame := Game{
 		Id:         uuid.NewString(),
 		Title:      title,
