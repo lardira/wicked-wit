@@ -4,13 +4,13 @@ a web-based cards game
 
 ## misc
 ### migrations
-this project uses goose
+this project uses goose for db migrations
 
 ```
-goose -dir ./migrations up 
+goose -dir ./server/migrations up 
 ```
 
 #### seeding for debug purposes
 ```
-goose -dir ./migrations/seed -no-versioning up
+goose -dir ./server/migrations/seed -no-versioning up
 ```

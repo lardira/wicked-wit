@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	envPath = "../.env"
+	defaultEnvPath = "../.env"
 )
 
 func init() {
-	err := godotenv.Load(envPath)
+	err := godotenv.Load(defaultEnvPath)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -37,6 +37,7 @@ func main() {
 
 	r.Mount("/games", handler.GameRouter())
 
+	log.Println("the server is running")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal(err)
 	}
