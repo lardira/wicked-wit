@@ -5,7 +5,22 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/lardira/wicked-wit/internal/db/model"
 )
+
+type Timed struct {
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func TimedFromModel(model *model.Timed) Timed {
+	return Timed{
+		CreatedAt: model.CreatedAt,
+		UpdatedAt: model.UpdatedAt,
+	}
+}
 
 type simpleData struct {
 	Data any `json:"data"`
