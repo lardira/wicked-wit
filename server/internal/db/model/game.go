@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -17,14 +16,17 @@ type Game struct {
 	MaxPlayers   uint
 	CurrentRound sql.NullInt64
 	MaxRound     uint
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+
+	Timed
 }
 
 func SelectGames() ([]Game, error) {
 	output := make([]Game, 0)
 
-	query := "SELECT id, title, max_players, max_round, current_round, created_at, updated_at FROM game"
+	query := `SELECT 
+			id, title, max_players, max_round, current_round, created_at, updated_at 
+		FROM game`
+
 	rows, err := db.Conn.Query(context.Background(), query)
 	if err != nil {
 		return output, err

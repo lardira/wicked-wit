@@ -19,6 +19,8 @@ func GameRouter() chi.Router {
 	r.Post("/", handler.CreateGame)
 	r.Delete("/{id}", handler.DeleteGame)
 
+	r.Mount("/{gameId}/rounds", RoundRouter())
+
 	return r
 }
 
@@ -36,6 +38,7 @@ func (h GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 			Title:      model.Title,
 			MaxPlayers: model.MaxPlayers,
 			MaxRound:   model.MaxRound,
+			Timed:      entity.TimedFromModel(&model.Timed),
 		}
 
 		if model.CurrentRound.Valid {

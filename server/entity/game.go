@@ -6,6 +6,8 @@ type Game struct {
 	MaxPlayers   uint   `json:"maxPlayers"`
 	CurrentRound *uint  `json:"currentRound"`
 	MaxRound     uint   `json:"maxRound"`
+
+	Timed
 }
 
 type GameRequest struct {
