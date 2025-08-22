@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -27,7 +26,6 @@ func (h GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	payload := []entity.Game{}
 	games, err := model.SelectGames()
 	if err != nil {
-		log.Println(games, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
