@@ -29,3 +29,9 @@ type CardRequest struct {
 	Text string   `json:"text"`
 	Type CardType `json:"type"`
 }
+
+type CardsUsedRequest struct {
+	GameId string `json:"gameId"`
+	Cards  []int  `json:"cards"`
+	UserId string `json:"userId"`
+}

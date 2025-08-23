@@ -7,6 +7,14 @@ import (
 	"github.com/lardira/wicked-wit/internal/db"
 )
 
+type CardStatus uint
+
+const (
+	CardStatusInUse   CardStatus = 0 //in use
+	CardStatusDropped CardStatus = 1 //dropped from hand
+	CardStatusPlayed  CardStatus = 2 //played in round
+)
+
 type CardTemplate struct {
 	Id                int
 	PlaceholdersCount int
@@ -61,6 +69,44 @@ func SelectUnusedCardAnswers(gameId string) ([]CardAnswer, error) {
 
 	args := pgx.NamedArgs{
 		"gameId": gameId,
+	}
+
+	rows, err := db.Conn.Query(context.Background(), query, args)
+	if err != nil {
+		return output, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var c CardAnswer
+		err := rows.Scan(
+			&c.Id,
+			&c.Text,
+		)
+		if err != nil {
+			return output, err
+		}
+		output = append(output, c)
+	}
+
+	return output, nil
+}
+
+func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]CardAnswer, error) {
+	output := []CardAnswer{}
+
+	query := `SELECT 
+		ac.id, ac."text" 
+	FROM answer_card ac 
+	INNER JOIN game_used_card guc ON guc.answer_card_id = ac.id 
+	WHERE guc.game_id = @gameId
+		AND guc.user_id = @userId
+		AND guc.status = @status`
+
+	args := pgx.NamedArgs{
+		"gameId": gameId,
+		"userId": userId,
+		"status": status,
 	}
 
 	rows, err := db.Conn.Query(context.Background(), query, args)
@@ -162,7 +208,7 @@ func InsertCardAnswer(text string) error {
 }
 
 func InsertCardTemplate(text string, placeholders_count int) error {
-	query := `INSERT INTO answer_card (text, placeholders_count)
+	query := `INSERT INTO template_card (text, placeholders_count)
 	 	VALUES (@text, @placeholders_count)`
 
 	args := pgx.NamedArgs{
@@ -176,4 +222,33 @@ func InsertCardTemplate(text string, placeholders_count int) error {
 		args,
 	)
 	return err
+}
+
+func InsertCardBatchUsed(gameId string, userId string, cardIds ...int) error {
+	batch := &pgx.Batch{}
+
+	query := `INSERT INTO game_used_card
+		(game_id, answer_card_id, status, user_id)
+		VALUES (@gameId, @answerCardId, @status, @userId)`
+
+	for _, cardId := range cardIds {
+		batch.Queue(query, pgx.NamedArgs{
+			"gameId":       gameId,
+			"answerCardId": cardId,
+			"status":       CardStatusInUse,
+			"userId":       userId,
+		})
+	}
+
+	batchResults := db.Conn.SendBatch(context.Background(), batch)
+	defer batchResults.Close()
+
+	for range batch.QueuedQueries {
+		_, err := batchResults.Exec()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
