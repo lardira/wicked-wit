@@ -24,7 +24,7 @@ func GameRouter() chi.Router {
 	return r
 }
 
-func (h GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
+func (h *GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	payload := []entity.Game{}
 	games, err := model.SelectGames()
 	if err != nil {
@@ -55,7 +55,7 @@ func (h GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
+func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	var game entity.GameRequest
 	err := json.NewDecoder(r.Body).Decode(&game)
 	if err != nil {
@@ -76,7 +76,7 @@ func (h GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	entity.SimpleData(w, newId)
 }
 
-func (h GameHandler) DeleteGame(w http.ResponseWriter, r *http.Request) {
+func (h *GameHandler) DeleteGame(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if len(id) == 0 {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

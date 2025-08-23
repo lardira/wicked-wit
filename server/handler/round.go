@@ -24,7 +24,7 @@ func RoundRouter() chi.Router {
 	return r
 }
 
-func (h RoundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
+func (h *RoundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
 	payload := []entity.Round{}
 
 	rounds, err := model.SelectRounds()
@@ -54,7 +54,7 @@ func (h RoundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
+func (h *RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
 	gameId := (chi.URLParam(r, "gameId"))
 	if err := uuid.Validate(gameId); err != nil {
 		entity.SimpleError(w, err, http.StatusBadRequest)
@@ -79,7 +79,7 @@ func (h RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
 	entity.SimpleData(w, newId)
 }
 
-func (h RoundHandler) DeleteRound(w http.ResponseWriter, r *http.Request) {
+func (h *RoundHandler) DeleteRound(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
