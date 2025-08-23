@@ -78,7 +78,7 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 
 func (h *GameHandler) DeleteGame(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	if len(id) == 0 {
+	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
