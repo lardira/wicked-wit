@@ -20,7 +20,6 @@ ADD
 
 DROP TABLE user_answer;
 
--- not suitable for current data flow
 CREATE TABLE IF NOT EXISTS user_answer (
     id serial PRIMARY KEY,
     user_id uuid NOT NULL REFERENCES users(id),

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/lardira/wicked-wit/entity"
 	"github.com/lardira/wicked-wit/internal/db/model"
 )
@@ -25,11 +26,29 @@ func CardRouter() chi.Router {
 
 func (h CardHandler) GetCardAnswers(w http.ResponseWriter, r *http.Request) {
 	payload := []entity.CardAnswer{}
+	cards := []model.CardAnswer{}
 
-	cards, err := model.SelectCardAnswers()
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+	gameId := r.URL.Query().Get("gameId")
+	if gameId == "" {
+		answerCards, err := model.SelectCardAnswers()
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		cards = answerCards
+	} else {
+		err := uuid.Validate(gameId)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		answerCards, err := model.SelectUnusedCardAnswers(gameId)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		cards = answerCards
 	}
 
 	for _, model := range cards {
@@ -49,11 +68,29 @@ func (h CardHandler) GetCardAnswers(w http.ResponseWriter, r *http.Request) {
 
 func (h CardHandler) GetCardTemplates(w http.ResponseWriter, r *http.Request) {
 	payload := []entity.CardTemplate{}
+	cards := []model.CardTemplate{}
 
-	cards, err := model.SelectCardTemplates()
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+	gameId := r.URL.Query().Get("gameId")
+	if gameId == "" {
+		templateCards, err := model.SelectCardTemplates()
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		cards = templateCards
+	} else {
+		err := uuid.Validate(gameId)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		templateCards, err := model.SelectUnusedCardTemplates(gameId)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		cards = templateCards
 	}
 
 	for _, model := range cards {
