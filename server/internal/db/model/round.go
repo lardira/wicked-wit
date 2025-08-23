@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
@@ -19,7 +18,7 @@ type Round struct {
 }
 
 func SelectRounds() ([]Round, error) {
-	output := make([]Round, 0)
+	output := []Round{}
 
 	query := `SELECT 
 		id, winner_id, position, created_at, updated_at, game_id
@@ -41,7 +40,7 @@ func SelectRounds() ([]Round, error) {
 			&r.GameId,
 		)
 		if err != nil {
-			log.Fatal(err)
+			return output, err
 		}
 		output = append(output, r)
 	}

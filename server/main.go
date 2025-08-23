@@ -36,6 +36,7 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Mount("/games", handler.GameRouter())
+	r.Mount("/cards", handler.CardRouter())
 
 	log.Println("the server is running")
 	if err := http.ListenAndServe(":8080", r); err != nil {

@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,7 +20,7 @@ type Game struct {
 }
 
 func SelectGames() ([]Game, error) {
-	output := make([]Game, 0)
+	output := []Game{}
 
 	query := `SELECT 
 			id, title, max_players, max_round, current_round, created_at, updated_at 
@@ -45,7 +44,7 @@ func SelectGames() ([]Game, error) {
 			&g.UpdatedAt,
 		)
 		if err != nil {
-			log.Fatal(err)
+			return output, err
 		}
 		output = append(output, g)
 	}

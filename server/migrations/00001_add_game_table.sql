@@ -1,10 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
-
 CREATE TABLE IF NOT EXISTS users (
     id uuid PRIMARY KEY,
     username VARCHAR(32) NOT NULL UNIQUE,
-    password text NOT NULL,
+    password TEXT NOT NULL,
     profile_img text NOT NULL,
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW()
@@ -36,16 +35,21 @@ CREATE TABLE IF NOT EXISTS games_users (
 );
 
 CREATE TABLE IF NOT EXISTS user_answer (
-    id serial PRIMARY KEY, 
+    id serial PRIMARY KEY,
     user_id uuid NOT NULL REFERENCES users(id),
     round_id int NOT NULL REFERENCES round(id),
     answer text NOT NULL,
     position smallint NOT NULL DEFAULT 1,
     created_at timestamp NOT NULL DEFAULT NOW()
 );
--- +goose StatementEnd
 
+-- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE game, round, users, games_users, user_answer CASCADE;
+DROP TABLE game,
+round,
+users,
+games_users,
+user_answer CASCADE;
+
 -- +goose StatementEnd
