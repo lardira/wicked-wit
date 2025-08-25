@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/lardira/wicked-wit/handler"
 	"github.com/lardira/wicked-wit/internal/db"
+	"github.com/lardira/wicked-wit/internal/s3"
 )
 
 const (
@@ -30,6 +31,18 @@ func main() {
 		log.Fatal(fmt.Errorf("Unable to connect to database: %v\n", err))
 	}
 	defer db.Close()
+
+	s3Config := &s3.S3Config{
+		AccessKeyID:     os.Getenv("MINIO_SERVER_ACCESS_KEY"),
+		SecretAccessKey: os.Getenv("MINIO_SERVER_SECRET_KEY"),
+		Url:             os.Getenv("MINIO_URL"),
+		Bucket:          os.Getenv("MINIO_BUCKET_NAME"),
+	}
+
+	err = s3.Init(s3Config)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Unable to connect to s3: %v\n", err))
+	}
 
 	r := chi.NewRouter()
 
