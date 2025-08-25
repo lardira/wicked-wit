@@ -38,6 +38,29 @@ func SelectUser(userId string) (User, error) {
 	return output, nil
 }
 
+func UpdateUserImg(id string, imgUrl string) error {
+
+	query := `UPDATE users
+			SET profile_img=@imgUrl
+			WHERE id=@id`
+
+	args := pgx.NamedArgs{
+		"id":     id,
+		"imgUrl": imgUrl,
+	}
+
+	_, err := db.Conn.Exec(
+		context.Background(),
+		query,
+		args,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func InsertUser(username string, password string) (string, error) {
 	newUserId := uuid.NewString()
 

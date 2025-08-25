@@ -18,10 +18,28 @@ services:
     restart: unless-stopped
     networks:
       - db-network
+  
+  s3:
+    image: bitnami/minio:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
+      MINIO_DEFAULT_BUCKETS: ${MINIO_BUCKET_NAME}
+    command: server /bitnami/minio/data --console-address :9001
+    volumes:
+      - miniodata:/bitnami/minio/data
 
 networks:
   db-network:
     driver: bridge
+  s3-network:
+    driver: bridge
 
 volumes:
   pgdata:
+  miniodata:
