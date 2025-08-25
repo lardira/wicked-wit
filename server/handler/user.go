@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	ValidImgContentTypes   = []string{"image/jpeg", "image/png", "image/webp"}
-	ValidImgFileExtensions = []string{".jpg", ".jpeg", ".png", ".webp"}
+	validImgContentTypes   = []string{"image/jpeg", "image/png", "image/webp"}
+	validImgFileExtensions = []string{".jpg", ".jpeg", ".png", ".webp"}
 )
 
 type UserHandler struct{}
@@ -96,11 +96,11 @@ func validateUploadedFileHeader(header *multipart.FileHeader) error {
 	fileName := header.Filename
 	fileExtension := path.Ext(fileName)
 
-	if !slices.Contains(ValidImgContentTypes, contentType) {
+	if !slices.Contains(validImgContentTypes, contentType) {
 		return fmt.Errorf("%v is unsupported content type for image", contentType)
 	}
 
-	if !slices.Contains(ValidImgFileExtensions, fileExtension) {
+	if !slices.Contains(validImgFileExtensions, fileExtension) {
 		return fmt.Errorf("%v is unsupported file extension for image", fileExtension)
 	}
 
