@@ -41,11 +41,6 @@ func (h *GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 			Timed:      entity.TimedFromModel(&model.Timed),
 		}
 
-		if model.CurrentRound.Valid {
-			round := uint(model.CurrentRound.Int64)
-			game.CurrentRound = &round
-		}
-
 		payload = append(payload, game)
 	}
 
