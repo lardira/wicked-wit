@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -10,11 +9,10 @@ import (
 )
 
 type Game struct {
-	Id           string
-	Title        string
-	MaxPlayers   uint
-	CurrentRound sql.NullInt64
-	MaxRound     uint
+	Id         string
+	Title      string
+	MaxPlayers uint
+	MaxRound   uint
 
 	Timed
 }
@@ -23,7 +21,7 @@ func SelectGames() ([]Game, error) {
 	output := []Game{}
 
 	query := `SELECT 
-			id, title, max_players, max_round, current_round, created_at, updated_at 
+			id, title, max_players, max_round, created_at, updated_at 
 		FROM game`
 
 	rows, err := db.Conn.Query(context.Background(), query)
@@ -39,7 +37,6 @@ func SelectGames() ([]Game, error) {
 			&g.Title,
 			&g.MaxPlayers,
 			&g.MaxRound,
-			&g.CurrentRound,
 			&g.CreatedAt,
 			&g.UpdatedAt,
 		)
