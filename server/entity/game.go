@@ -14,6 +14,7 @@ type Game struct {
 	MaxPlayers uint       `json:"maxPlayers"`
 	MaxRound   uint       `json:"maxRound"`
 	Status     GameStatus `json:"status"`
+	UserHostId string     `json:"userHostId"`
 
 	Timed
 }

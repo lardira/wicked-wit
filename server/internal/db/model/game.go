@@ -13,6 +13,7 @@ type Game struct {
 	Title      string
 	MaxPlayers uint
 	MaxRound   uint
+	UserHostId string
 
 	Timed
 }
@@ -21,7 +22,7 @@ func SelectGames() ([]Game, error) {
 	output := []Game{}
 
 	query := `SELECT 
-			id, title, max_players, max_round, created_at, updated_at 
+			id, title, max_players, max_round, user_host_id, created_at, updated_at 
 		FROM game`
 
 	rows, err := db.Conn.Query(context.Background(), query)
@@ -37,6 +38,7 @@ func SelectGames() ([]Game, error) {
 			&g.Title,
 			&g.MaxPlayers,
 			&g.MaxRound,
+			&g.UserHostId,
 			&g.CreatedAt,
 			&g.UpdatedAt,
 		)
@@ -53,14 +55,15 @@ func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
 	newGameId := uuid.NewString()
 
 	query := `INSERT INTO game 
-		(id, title, max_players, max_round)
-		VALUES (@id, @title, @max_players, @max_round)`
+		(id, title, max_players, max_round, user_host_id)
+		VALUES (@id, @title, @max_players, @max_round, @user_host_id)`
 
 	args := pgx.NamedArgs{
-		"id":          newGameId,
-		"title":       title,
-		"max_players": maxPlayers,
-		"max_round":   maxRound,
+		"id":           newGameId,
+		"title":        title,
+		"max_players":  maxPlayers,
+		"max_round":    maxRound,
+		"user_host_id": MockUserId,
 	}
 
 	_, err := db.Conn.Exec(
