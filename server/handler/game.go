@@ -38,6 +38,7 @@ func (h *GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 			Title:      model.Title,
 			MaxPlayers: model.MaxPlayers,
 			MaxRound:   model.MaxRound,
+			UserHostId: model.UserHostId,
 			Timed:      entity.TimedFromModel(&model.Timed),
 		}
 
