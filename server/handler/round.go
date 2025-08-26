@@ -63,7 +63,7 @@ func (h *RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
 
 	rounds, err := model.SelectRounds()
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
 		gameId,
 	)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
