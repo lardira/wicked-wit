@@ -10,10 +10,21 @@ import (
 	"github.com/lardira/wicked-wit/pkg/response"
 )
 
-type Handler struct{}
+type Handler struct {
+	roundService *Service
+}
+
+func NewRoundHandler(roundService *Service) *Handler {
+	return &Handler{
+		roundService: roundService,
+	}
+}
 
 func Router() chi.Router {
-	var handler Handler
+	handler := NewRoundHandler(
+		&Service{},
+	)
+
 	r := chi.NewRouter()
 
 	r.Get("/", handler.GetRounds)
@@ -24,31 +35,14 @@ func Router() chi.Router {
 }
 
 func (h *Handler) GetRounds(w http.ResponseWriter, r *http.Request) {
-	payload := []Round{}
-
-	rounds, err := Select()
+	payload, err := h.roundService.GetRounds()
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	for _, model := range rounds {
-		round := Round{
-			Id:       model.Id,
-			Position: model.Position,
-			GameId:   model.GameId,
-			Timed:    response.TimedFromModel(&model.TimedModel),
-		}
-
-		if model.WinnerId.Valid {
-			round.WinnerId = &model.WinnerId.String
-		}
-
-		payload = append(payload, round)
-	}
-
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -60,16 +54,7 @@ func (h *Handler) AddRound(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rounds, err := Select()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	newId, err := Insert(
-		len(rounds)+1,
-		gameId,
-	)
+	newId, err := h.roundService.AddRound(gameId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -85,6 +70,6 @@ func (h *Handler) DeleteRound(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Delete(id)
+	h.roundService.DeleteRound(id)
 	w.WriteHeader(http.StatusNoContent)
 }
