@@ -1,4 +1,4 @@
-package handler
+package user
 
 import (
 	"context"
@@ -13,9 +13,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/lardira/wicked-wit/entity"
-	"github.com/lardira/wicked-wit/internal/db/model"
 	"github.com/lardira/wicked-wit/internal/s3"
+	"github.com/lardira/wicked-wit/pkg/response"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -28,10 +27,10 @@ var (
 	validImgFileExtensions = []string{".jpg", ".jpeg", ".png", ".webp"}
 )
 
-type UserHandler struct{}
+type Handler struct{}
 
-func UserRouter() chi.Router {
-	var handler UserHandler
+func Router() chi.Router {
+	var handler Handler
 	r := chi.NewRouter()
 
 	r.Get("/{id}", handler.GetUser)
@@ -42,23 +41,23 @@ func UserRouter() chi.Router {
 	return r
 }
 
-func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if err := uuid.Validate(id); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	user, err := model.SelectUser(id)
+	user, err := SelectUser(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	payload := entity.User{
+	payload := User{
 		Id:       user.Id,
 		Username: user.Username,
-		Timed:    entity.TimedFromModel(&user.Timed),
+		Timed:    response.TimedFromModel(&user.TimedModel),
 	}
 
 	if user.ProfileImg.Valid {
@@ -71,15 +70,15 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user entity.UserRequest
+func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var user UserRequest
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	newId, err := model.InsertUser(
+	newId, err := InsertUser(
 		user.Username,
 		user.Password,
 	)
@@ -88,7 +87,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entity.SimpleData(w, newId)
+	response.SimpleData(w, newId)
 }
 
 func validateUploadedFileHeader(header *multipart.FileHeader) error {
@@ -107,7 +106,7 @@ func validateUploadedFileHeader(header *multipart.FileHeader) error {
 	return nil
 }
 
-func (h *UserHandler) UpdateProfileImage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateProfileImage(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		// TODO: check if user exists
@@ -125,7 +124,7 @@ func (h *UserHandler) UpdateProfileImage(w http.ResponseWriter, r *http.Request)
 	defer file.Close()
 
 	if err := validateUploadedFileHeader(header); err != nil {
-		entity.SimpleError(w, err, http.StatusBadRequest)
+		response.SimpleError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -145,21 +144,21 @@ func (h *UserHandler) UpdateProfileImage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := model.UpdateUserImg(id, fileUrl); err != nil {
+	if err := UpdateUserImg(id, fileUrl); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	entity.SimpleData(w, fileUrl)
+	response.SimpleData(w, fileUrl)
 }
 
-func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	model.DeleteUser(id)
+	DeleteUser(id)
 	w.WriteHeader(http.StatusNoContent)
 }

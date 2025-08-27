@@ -1,45 +1,45 @@
-package handler
+package game
 
 import (
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/lardira/wicked-wit/entity"
-	"github.com/lardira/wicked-wit/internal/db/model"
+	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/pkg/round"
 )
 
-type GameHandler struct{}
+type Handler struct{}
 
-func GameRouter() chi.Router {
-	var handler GameHandler
+func Router() chi.Router {
+	var handler Handler
 	r := chi.NewRouter()
 
 	r.Get("/", handler.GetGames)
 	r.Post("/", handler.CreateGame)
 	r.Delete("/{id}", handler.DeleteGame)
 
-	r.Mount("/{gameId}/rounds", RoundRouter())
+	r.Mount("/{gameId}/rounds", round.Router())
 
 	return r
 }
 
-func (h *GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
-	payload := []entity.Game{}
-	games, err := model.SelectGames()
+func (h *Handler) GetGames(w http.ResponseWriter, r *http.Request) {
+	payload := []Game{}
+	games, err := SelectGames()
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	for _, model := range games {
-		game := entity.Game{
+		game := Game{
 			Id:         model.Id,
 			Title:      model.Title,
 			MaxPlayers: model.MaxPlayers,
 			MaxRound:   model.MaxRound,
 			UserHostId: model.UserHostId,
-			Timed:      entity.TimedFromModel(&model.Timed),
+			Timed:      response.TimedFromModel(&model.TimedModel),
 		}
 
 		payload = append(payload, game)
@@ -51,15 +51,15 @@ func (h *GameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
-	var game entity.GameRequest
+func (h *Handler) CreateGame(w http.ResponseWriter, r *http.Request) {
+	var game GameRequest
 	err := json.NewDecoder(r.Body).Decode(&game)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	newId, err := model.InsertGame(
+	newId, err := InsertGame(
 		game.Title,
 		game.MaxPlayers,
 		game.MaxRound,
@@ -69,16 +69,16 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entity.SimpleData(w, newId)
+	response.SimpleData(w, newId)
 }
 
-func (h *GameHandler) DeleteGame(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteGame(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	model.DeleteGame(id)
+	DeleteGame(id)
 	w.WriteHeader(http.StatusNoContent)
 }

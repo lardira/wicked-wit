@@ -1,4 +1,4 @@
-package model
+package game
 
 import (
 	"context"
@@ -6,20 +6,22 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
+	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/pkg/user"
 )
 
-type Game struct {
+type GameModel struct {
 	Id         string
 	Title      string
 	MaxPlayers uint
 	MaxRound   uint
 	UserHostId string
 
-	Timed
+	response.TimedModel
 }
 
-func SelectGames() ([]Game, error) {
-	output := []Game{}
+func SelectGames() ([]GameModel, error) {
+	output := []GameModel{}
 
 	query := `SELECT 
 			id, title, max_players, max_round, user_host_id, created_at, updated_at 
@@ -32,7 +34,7 @@ func SelectGames() ([]Game, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var g Game
+		var g GameModel
 		err := rows.Scan(
 			&g.Id,
 			&g.Title,
@@ -63,7 +65,7 @@ func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
 		"title":        title,
 		"max_players":  maxPlayers,
 		"max_round":    maxRound,
-		"user_host_id": MockUserId,
+		"user_host_id": user.MockUserId,
 	}
 
 	_, err := db.Conn.Exec(

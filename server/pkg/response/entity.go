@@ -1,4 +1,4 @@
-package entity
+package response
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/lardira/wicked-wit/internal/db/model"
 )
 
 type Timed struct {
@@ -15,7 +13,7 @@ type Timed struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func TimedFromModel(model *model.Timed) Timed {
+func TimedFromModel(model *TimedModel) Timed {
 	return Timed{
 		CreatedAt: model.CreatedAt,
 		UpdatedAt: model.UpdatedAt,

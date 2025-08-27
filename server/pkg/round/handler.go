@@ -1,4 +1,4 @@
-package handler
+package round
 
 import (
 	"encoding/json"
@@ -7,14 +7,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/lardira/wicked-wit/entity"
-	"github.com/lardira/wicked-wit/internal/db/model"
+	"github.com/lardira/wicked-wit/pkg/response"
 )
 
-type RoundHandler struct{}
+type Handler struct{}
 
-func RoundRouter() chi.Router {
-	var handler RoundHandler
+func Router() chi.Router {
+	var handler Handler
 	r := chi.NewRouter()
 
 	r.Get("/", handler.GetRounds)
@@ -24,21 +23,21 @@ func RoundRouter() chi.Router {
 	return r
 }
 
-func (h *RoundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
-	payload := []entity.Round{}
+func (h *Handler) GetRounds(w http.ResponseWriter, r *http.Request) {
+	payload := []Round{}
 
-	rounds, err := model.SelectRounds()
+	rounds, err := Select()
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	for _, model := range rounds {
-		round := entity.Round{
+		round := Round{
 			Id:       model.Id,
 			Position: model.Position,
 			GameId:   model.GameId,
-			Timed:    entity.TimedFromModel(&model.Timed),
+			Timed:    response.TimedFromModel(&model.TimedModel),
 		}
 
 		if model.WinnerId.Valid {
@@ -54,20 +53,20 @@ func (h *RoundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AddRound(w http.ResponseWriter, r *http.Request) {
 	gameId := (chi.URLParam(r, "gameId"))
 	if err := uuid.Validate(gameId); err != nil {
-		entity.SimpleError(w, err, http.StatusBadRequest)
+		response.SimpleError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	rounds, err := model.SelectRounds()
+	rounds, err := Select()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	newId, err := model.InsertRound(
+	newId, err := Insert(
 		len(rounds)+1,
 		gameId,
 	)
@@ -76,16 +75,16 @@ func (h *RoundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entity.SimpleData(w, newId)
+	response.SimpleData(w, newId)
 }
 
-func (h *RoundHandler) DeleteRound(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteRound(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	model.DeleteRound(id)
+	Delete(id)
 	w.WriteHeader(http.StatusNoContent)
 }
