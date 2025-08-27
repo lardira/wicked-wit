@@ -9,10 +9,21 @@ import (
 	"github.com/lardira/wicked-wit/pkg/round"
 )
 
-type Handler struct{}
+type Handler struct {
+	gameService *Service
+}
+
+func NewGameHandler(gameService *Service) *Handler {
+	return &Handler{
+		gameService: gameService,
+	}
+}
 
 func Router() chi.Router {
-	var handler Handler
+	handler := NewGameHandler(
+		&Service{},
+	)
+
 	r := chi.NewRouter()
 
 	r.Get("/", handler.GetGames)
@@ -25,28 +36,14 @@ func Router() chi.Router {
 }
 
 func (h *Handler) GetGames(w http.ResponseWriter, r *http.Request) {
-	payload := []Game{}
-	games, err := SelectGames()
+	payload, err := h.gameService.GetGames()
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	for _, model := range games {
-		game := Game{
-			Id:         model.Id,
-			Title:      model.Title,
-			MaxPlayers: model.MaxPlayers,
-			MaxRound:   model.MaxRound,
-			UserHostId: model.UserHostId,
-			Timed:      response.TimedFromModel(&model.TimedModel),
-		}
-
-		payload = append(payload, game)
-	}
-
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -55,17 +52,13 @@ func (h *Handler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	var game GameRequest
 	err := json.NewDecoder(r.Body).Decode(&game)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	newId, err := InsertGame(
-		game.Title,
-		game.MaxPlayers,
-		game.MaxRound,
-	)
+	newId, err := h.gameService.CreateGame(&game)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -79,6 +72,7 @@ func (h *Handler) DeleteGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DeleteGame(id)
+	h.gameService.DeleteGame(id)
+
 	w.WriteHeader(http.StatusNoContent)
 }
