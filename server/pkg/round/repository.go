@@ -1,4 +1,4 @@
-package model
+package round
 
 import (
 	"context"
@@ -6,19 +6,20 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
+	"github.com/lardira/wicked-wit/pkg/response"
 )
 
-type Round struct {
+type RoundModel struct {
 	Id       int
 	WinnerId sql.NullString
 	Position int
 	GameId   string
 
-	Timed
+	response.TimedModel
 }
 
-func SelectRounds() ([]Round, error) {
-	output := []Round{}
+func Select() ([]RoundModel, error) {
+	output := []RoundModel{}
 
 	query := `SELECT 
 		id, winner_id, position, created_at, updated_at, game_id
@@ -30,7 +31,7 @@ func SelectRounds() ([]Round, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var r Round
+		var r RoundModel
 		err := rows.Scan(
 			&r.Id,
 			&r.WinnerId,
@@ -48,7 +49,7 @@ func SelectRounds() ([]Round, error) {
 	return output, nil
 }
 
-func InsertRound(position int, gameId string) (int, error) {
+func Insert(position int, gameId string) (int, error) {
 	query := `INSERT INTO round (position, game_id) VALUES (@position, @game_id)`
 
 	args := pgx.NamedArgs{
@@ -76,7 +77,7 @@ func InsertRound(position int, gameId string) (int, error) {
 	return newRoundId, nil
 }
 
-func DeleteRound(id int) {
+func Delete(id int) {
 	query := "DELETE FROM round WHERE id = $1"
 	db.Conn.Exec(context.Background(), query, id)
 }

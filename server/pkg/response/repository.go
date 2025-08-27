@@ -1,8 +1,8 @@
-package model
+package response
 
 import "time"
 
-type Timed struct {
+type TimedModel struct {
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }

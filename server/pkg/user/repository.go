@@ -1,4 +1,4 @@
-package model
+package user
 
 import (
 	"context"
@@ -7,22 +7,23 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
+	"github.com/lardira/wicked-wit/pkg/response"
 )
 
 const (
 	MockUserId string = "c5eedc3c-0e51-4cb8-bfdd-a64babc67725"
 )
 
-type User struct {
+type UserModel struct {
 	Id         string
 	Username   string
 	ProfileImg sql.NullString
 
-	Timed
+	response.TimedModel
 }
 
-func SelectUser(userId string) (User, error) {
-	var output User
+func SelectUser(userId string) (UserModel, error) {
+	var output UserModel
 
 	query := `SELECT 
 	id, username, profile_img, created_at, updated_at 

@@ -1,4 +1,6 @@
-package entity
+package game
+
+import "github.com/lardira/wicked-wit/pkg/response"
 
 type GameStatus uint
 
@@ -16,7 +18,7 @@ type Game struct {
 	Status     GameStatus `json:"status"`
 	UserHostId string     `json:"userHostId"`
 
-	Timed
+	response.Timed
 }
 
 type GameRequest struct {

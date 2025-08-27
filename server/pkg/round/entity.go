@@ -1,4 +1,6 @@
-package entity
+package round
+
+import "github.com/lardira/wicked-wit/pkg/response"
 
 type RoundStatus uint
 
@@ -16,5 +18,5 @@ type Round struct {
 	GameId   string      `json:"gameId"`
 	Status   RoundStatus `json:"status"`
 
-	Timed
+	response.Timed
 }
