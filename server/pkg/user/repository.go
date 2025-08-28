@@ -117,7 +117,14 @@ func InsertUserAnswer(userId string, roundId int) (int, error) {
 	}
 
 	var answerId int
-	query = `SELECT id FROM round WHERE round_id = $1 LIMIT 1`
+	query = `SELECT
+			ua.id
+		FROM
+			user_answer ua
+		JOIN round r ON
+			r.id = ua.round_id
+		WHERE
+			r.id = $1`
 
 	err = db.Conn.QueryRow(context.Background(), query, roundId).Scan(&answerId)
 	if err != nil {

@@ -15,19 +15,19 @@ const (
 	CardStatusPlayed  CardStatus = 2 //played in round
 )
 
-type CardTemplate struct {
+type TemplateCardModel struct {
 	Id                int
 	PlaceholdersCount int
 	Text              string
 }
 
-type CardAnswer struct {
+type AnswerCardModel struct {
 	Id   int
 	Text string
 }
 
-func SelectUnusedAnswerCards(gameId string) ([]CardAnswer, error) {
-	output := []CardAnswer{}
+func SelectUnusedAnswerCards(gameId string) ([]AnswerCardModel, error) {
+	output := []AnswerCardModel{}
 
 	query := `SELECT 
 		ac.id,
@@ -52,7 +52,7 @@ func SelectUnusedAnswerCards(gameId string) ([]CardAnswer, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardAnswer
+		var c AnswerCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -66,21 +66,25 @@ func SelectUnusedAnswerCards(gameId string) ([]CardAnswer, error) {
 	return output, nil
 }
 
-func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]CardAnswer, error) {
-	output := []CardAnswer{}
+func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]AnswerCardModel, error) {
+	output := []AnswerCardModel{}
 
-	query := `SELECT 
-		ac.id, ac."text" 
-	FROM answer_card ac 
-	INNER JOIN game_used_card guc ON guc.answer_card_id = ac.id 
-	WHERE guc.game_id = @game_id
+	query := `SELECT
+		ac.id,
+		ac."text"
+	FROM
+		answer_card ac
+	JOIN game_used_card guc ON
+		guc.answer_card_id = ac.id
+	WHERE
+		guc.status = @status
 		AND guc.user_id = @user_id
-		AND guc.status = @status`
+		AND guc.game_id = @game_id`
 
 	args := pgx.NamedArgs{
-		"game_id": gameId,
-		"user_id": userId,
 		"status":  status,
+		"user_id": userId,
+		"game_id": gameId,
 	}
 
 	rows, err := db.Conn.Query(context.Background(), query, args)
@@ -90,7 +94,7 @@ func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]C
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardAnswer
+		var c AnswerCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -104,8 +108,8 @@ func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]C
 	return output, nil
 }
 
-func SelectCardTemplates() ([]CardTemplate, error) {
-	output := []CardTemplate{}
+func SelectCardTemplates() ([]TemplateCardModel, error) {
+	output := []TemplateCardModel{}
 
 	query := `SELECT id, text, placeholders_count FROM template_card`
 
@@ -116,7 +120,7 @@ func SelectCardTemplates() ([]CardTemplate, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardTemplate
+		var c TemplateCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -131,8 +135,8 @@ func SelectCardTemplates() ([]CardTemplate, error) {
 	return output, nil
 }
 
-func SelectUnusedCardTemplates(gameId string) ([]CardTemplate, error) {
-	output := []CardTemplate{}
+func SelectUnusedCardTemplates(gameId string) ([]TemplateCardModel, error) {
+	output := []TemplateCardModel{}
 
 	query := `SELECT
 		tc.id, tc.text, tc.placeholders_count
@@ -155,7 +159,7 @@ func SelectUnusedCardTemplates(gameId string) ([]CardTemplate, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardTemplate
+		var c TemplateCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -247,5 +251,22 @@ func InsertPlayedCard(answerId int, usedCardId int, placeholderIndex int) error 
 }
 
 func UpdateUsedCardStatus(usedCardId int, status CardStatus) error {
-	return nil
+	query := `UPDATE
+		game_used_card
+	SET
+		status = @status
+	WHERE
+		id = @id`
+
+	args := pgx.NamedArgs{
+		"id":     usedCardId,
+		"status": status,
+	}
+
+	_, err := db.Conn.Exec(
+		context.Background(),
+		query,
+		args,
+	)
+	return err
 }
