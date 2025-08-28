@@ -108,34 +108,7 @@ func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]A
 	return output, nil
 }
 
-func SelectCardTemplates() ([]TemplateCardModel, error) {
-	output := []TemplateCardModel{}
-
-	query := `SELECT id, text, placeholders_count FROM template_card`
-
-	rows, err := db.Conn.Query(context.Background(), query)
-	if err != nil {
-		return output, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var c TemplateCardModel
-		err := rows.Scan(
-			&c.Id,
-			&c.Text,
-			&c.PlaceholdersCount,
-		)
-		if err != nil {
-			return output, err
-		}
-		output = append(output, c)
-	}
-
-	return output, nil
-}
-
-func SelectUnusedCardTemplates(gameId string) ([]TemplateCardModel, error) {
+func SelectUnusedTemplateCards(gameId string) ([]TemplateCardModel, error) {
 	output := []TemplateCardModel{}
 
 	query := `SELECT
@@ -146,7 +119,7 @@ func SelectUnusedCardTemplates(gameId string) ([]TemplateCardModel, error) {
 				SELECT r.template_card_id, r.game_id 
 					FROM round r 
 					WHERE r.template_card_id = tc.id AND r.game_id = @game_id
-	)`
+					)`
 
 	args := pgx.NamedArgs{
 		"game_id": gameId,
@@ -185,7 +158,7 @@ func InsertCardAnswer(text string) error {
 	return err
 }
 
-func InsertCardTemplate(text string, placeholders_count int) error {
+func InsertTemplateCard(text string, placeholders_count int) error {
 	query := `INSERT INTO template_card (text, placeholders_count)
 	 	VALUES (@text, @placeholders_count)`
 

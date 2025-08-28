@@ -1,15 +1,24 @@
 package round
 
 import (
+	"github.com/lardira/wicked-wit/pkg/card"
 	"github.com/lardira/wicked-wit/pkg/response"
 )
 
-type Service struct{}
+type Service struct {
+	cardService *card.Service
+}
 
-func (s *Service) GetRounds() ([]Round, error) {
+func NewRoundService(cardService *card.Service) *Service {
+	return &Service{
+		cardService: cardService,
+	}
+}
+
+func (s *Service) GetRounds(gameId string) ([]Round, error) {
 	rounds := []Round{}
 
-	roundModels, err := Select()
+	roundModels, err := Select(gameId)
 	if err != nil {
 		return nil, err
 	}
@@ -33,21 +42,34 @@ func (s *Service) GetRounds() ([]Round, error) {
 }
 
 func (s *Service) AddRound(gameId string) (int, error) {
-	rounds, err := s.GetRounds()
+	rounds, err := s.GetRounds(gameId)
 	if err != nil {
 		return 0, err
 	}
 
-	// TODO: fille all of the players' card hands
+	var position int
+	if len(rounds) == 0 {
+		position = 0
+	} else {
+		position = len(rounds) + 1
+	}
+
+	templateCard, err := s.cardService.GetRandomTemplateCard(gameId)
+	if err != nil {
+		return 0, err
+	}
 
 	// TODO: check last position for better validation
 	newId, err := Insert(
-		len(rounds)+1,
+		position,
 		gameId,
+		templateCard.Id,
 	)
 	if err != nil {
 		return 0, err
 	}
+
+	// TODO: fill all of the players' card hands
 
 	return newId, nil
 }

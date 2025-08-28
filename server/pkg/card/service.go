@@ -1,6 +1,7 @@
 package card
 
 import (
+	"github.com/lardira/wicked-wit/internal/helper"
 	"github.com/lardira/wicked-wit/pkg/user"
 )
 
@@ -50,4 +51,35 @@ func (s *Service) PlayCards(roundId int, userId string, cardIds ...int) (int, er
 	}
 
 	return answerId, nil
+}
+
+func (s *Service) GetUnusedTemplateCards(gameId string) ([]TemplateCard, error) {
+	cards := []TemplateCard{}
+
+	cardModels, err := SelectUnusedTemplateCards(gameId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, model := range cardModels {
+		cards = append(cards,
+			TemplateCard{
+				Id:                model.Id,
+				Text:              model.Text,
+				PlaceholdersCount: model.PlaceholdersCount,
+			},
+		)
+	}
+
+	return cards, nil
+}
+
+func (s *Service) GetRandomTemplateCard(gameId string) (*TemplateCard, error) {
+	cards, err := s.GetUnusedTemplateCards(gameId)
+	if err != nil {
+		return nil, err
+	}
+
+	randomCard := helper.RandomItem(cards)
+	return &randomCard, nil
 }
