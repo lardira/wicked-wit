@@ -46,12 +46,12 @@ func SelectUser(userId string) (UserModel, error) {
 func UpdateUserImg(id string, imgUrl string) error {
 
 	query := `UPDATE users
-			SET profile_img=@imgUrl
+			SET profile_img=@profile_img
 			WHERE id=@id`
 
 	args := pgx.NamedArgs{
-		"id":     id,
-		"imgUrl": imgUrl,
+		"id":          id,
+		"profile_img": imgUrl,
 	}
 
 	_, err := db.Conn.Exec(
@@ -94,4 +94,35 @@ func InsertUser(username string, password string) (string, error) {
 func DeleteUser(id string) {
 	query := "DELETE FROM users WHERE id = $1"
 	db.Conn.Exec(context.Background(), query, id)
+}
+
+func InsertUserAnswer(userId string, roundId int) (int, error) {
+	query := `INSERT INTO user_answer 
+		(user_id, round_id)
+		VALUES (@user_id, @round_id)
+	`
+
+	args := pgx.NamedArgs{
+		"user_id":  userId,
+		"round_id": roundId,
+	}
+
+	_, err := db.Conn.Exec(
+		context.Background(),
+		query,
+		args,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	var answerId int
+	query = `SELECT id FROM round WHERE round_id = $1 LIMIT 1`
+
+	err = db.Conn.QueryRow(context.Background(), query, roundId).Scan(&answerId)
+	if err != nil {
+		return 0, err
+	}
+
+	return answerId, nil
 }
