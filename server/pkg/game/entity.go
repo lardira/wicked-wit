@@ -22,7 +22,9 @@ type Game struct {
 }
 
 type GameRequest struct {
-	Title      string `json:"title"`
-	MaxPlayers uint   `json:"maxPlayers"`
-	MaxRound   uint   `json:"maxRound"`
+	Title      string   `json:"title"`
+	MaxPlayers uint     `json:"maxPlayers"`
+	MaxRound   uint     `json:"maxRound"`
+	Users      []string `json:"userIds"`
+	HostId     string   `json:"hostId"`
 }

@@ -58,6 +58,11 @@ func (h *Handler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(game.Users) == 0 {
+		http.Error(w, "users must not be empty", http.StatusBadRequest)
+		return
+	}
+
 	newId, err := h.gameService.CreateGame(&game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

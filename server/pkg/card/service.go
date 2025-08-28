@@ -7,7 +7,7 @@ import (
 type Service struct{}
 
 func (s *Service) UseCards(gameId string, userId string, cardIds ...int) error {
-	return InsertCardBatchUsed(gameId, userId, cardIds...)
+	return BatchInsertCardUsed(gameId, userId, cardIds...)
 }
 
 func (s *Service) GetCards(gameId string, userId string) ([]Card, error) {
