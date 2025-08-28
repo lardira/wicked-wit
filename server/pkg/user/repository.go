@@ -10,10 +10,6 @@ import (
 	"github.com/lardira/wicked-wit/pkg/response"
 )
 
-const (
-	MockUserId string = "c5eedc3c-0e51-4cb8-bfdd-a64babc67725"
-)
-
 type UserModel struct {
 	Id         string
 	Username   string

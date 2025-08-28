@@ -30,12 +30,19 @@ func (s *Service) GetGames() ([]Game, error) {
 }
 
 func (s *Service) CreateGame(gameRequest *GameRequest) (string, error) {
+	// TODO: add transation
+
 	newId, err := InsertGame(
 		gameRequest.Title,
 		gameRequest.MaxPlayers,
 		gameRequest.MaxRound,
+		gameRequest.HostId,
 	)
 	if err != nil {
+		return "", err
+	}
+
+	if err := BatchInsertGameUser(newId, gameRequest.Users...); err != nil {
 		return "", err
 	}
 

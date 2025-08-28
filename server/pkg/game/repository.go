@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
 	"github.com/lardira/wicked-wit/pkg/response"
-	"github.com/lardira/wicked-wit/pkg/user"
 )
 
 type GameModel struct {
@@ -53,7 +52,7 @@ func SelectGames() ([]GameModel, error) {
 	return output, nil
 }
 
-func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
+func InsertGame(title string, maxPlayers uint, maxRound uint, userHostId string) (string, error) {
 	newGameId := uuid.NewString()
 
 	query := `INSERT INTO game 
@@ -65,7 +64,7 @@ func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
 		"title":        title,
 		"max_players":  maxPlayers,
 		"max_round":    maxRound,
-		"user_host_id": user.MockUserId,
+		"user_host_id": userHostId,
 	}
 
 	_, err := db.Conn.Exec(
@@ -83,4 +82,30 @@ func InsertGame(title string, maxPlayers uint, maxRound uint) (string, error) {
 func DeleteGame(id string) {
 	query := "DELETE FROM game WHERE id = $1"
 	db.Conn.Exec(context.Background(), query, id)
+}
+
+func BatchInsertGameUser(gameId string, userIds ...string) error {
+	batch := &pgx.Batch{}
+
+	query := `INSERT INTO
+		games_users (game_id, user_id)
+		VALUES (@game_id, @user_id)`
+
+	for _, userId := range userIds {
+		batch.Queue(query, pgx.NamedArgs{
+			"game_id": gameId,
+			"user_id": userId,
+		})
+	}
+
+	batchResults := db.Conn.SendBatch(context.Background(), batch)
+	defer batchResults.Close()
+
+	for range batch.QueuedQueries {
+		_, err := batchResults.Exec()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

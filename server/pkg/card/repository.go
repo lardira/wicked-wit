@@ -202,7 +202,7 @@ func InsertCardTemplate(text string, placeholders_count int) error {
 	return err
 }
 
-func InsertCardBatchUsed(gameId string, userId string, cardIds ...int) error {
+func BatchInsertCardUsed(gameId string, userId string, cardIds ...int) error {
 	batch := &pgx.Batch{}
 
 	query := `INSERT INTO game_used_card
