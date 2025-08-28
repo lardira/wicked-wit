@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/lardira/wicked-wit/pkg/card"
 	"github.com/lardira/wicked-wit/pkg/response"
 )
 
@@ -22,7 +23,7 @@ func NewRoundHandler(roundService *Service) *Handler {
 
 func Router() chi.Router {
 	handler := NewRoundHandler(
-		&Service{},
+		NewRoundService(&card.Service{}),
 	)
 
 	r := chi.NewRouter()
@@ -35,7 +36,13 @@ func Router() chi.Router {
 }
 
 func (h *Handler) GetRounds(w http.ResponseWriter, r *http.Request) {
-	payload, err := h.roundService.GetRounds()
+	gameId := chi.URLParam(r, "gameId")
+	if gameId == "" {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	payload, err := h.roundService.GetRounds(gameId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

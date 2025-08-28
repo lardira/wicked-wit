@@ -18,13 +18,22 @@ type RoundModel struct {
 	response.TimedModel
 }
 
-func Select() ([]RoundModel, error) {
+func Select(gameId string) ([]RoundModel, error) {
 	output := []RoundModel{}
 
-	query := `SELECT 
-		id, winner_id, position, created_at, updated_at, game_id
-		FROM round`
-	rows, err := db.Conn.Query(context.Background(), query)
+	query := `SELECT
+		id,
+		winner_id,
+		"position",
+		game_id,
+		created_at,
+		updated_at
+	FROM
+		round
+	WHERE
+		game_id = $1`
+
+	rows, err := db.Conn.Query(context.Background(), query, gameId)
 	if err != nil {
 		return output, err
 	}
@@ -36,9 +45,9 @@ func Select() ([]RoundModel, error) {
 			&r.Id,
 			&r.WinnerId,
 			&r.Position,
+			&r.GameId,
 			&r.CreatedAt,
 			&r.UpdatedAt,
-			&r.GameId,
 		)
 		if err != nil {
 			return output, err
@@ -49,12 +58,15 @@ func Select() ([]RoundModel, error) {
 	return output, nil
 }
 
-func Insert(position int, gameId string) (int, error) {
-	query := `INSERT INTO round (position, game_id) VALUES (@position, @game_id)`
+func Insert(position int, gameId string, templateId int) (int, error) {
+	query := `INSERT INTO round 
+		(position, game_id, template_card_id) 
+		VALUES (@position, @game_id, @template_card_id)`
 
 	args := pgx.NamedArgs{
-		"position": position,
-		"game_id":  gameId,
+		"position":         position,
+		"game_id":          gameId,
+		"template_card_id": templateId,
 	}
 
 	_, err := db.Conn.Exec(

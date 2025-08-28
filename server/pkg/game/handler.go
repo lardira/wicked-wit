@@ -22,7 +22,7 @@ func NewGameHandler(gameService *Service) *Handler {
 
 func Router() chi.Router {
 	handler := NewGameHandler(
-		&Service{},
+		NewGameService(round.NewRoundService(&card.Service{})),
 	)
 
 	r := chi.NewRouter()

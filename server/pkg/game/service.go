@@ -2,9 +2,18 @@ package game
 
 import (
 	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/pkg/round"
 )
 
-type Service struct{}
+type Service struct {
+	roundService *round.Service
+}
+
+func NewGameService(roundService *round.Service) *Service {
+	return &Service{
+		roundService: roundService,
+	}
+}
 
 func (s *Service) GetGames() ([]Game, error) {
 	games := []Game{}
@@ -43,6 +52,10 @@ func (s *Service) CreateGame(gameRequest *GameRequest) (string, error) {
 	}
 
 	if err := BatchInsertGameUser(newId, gameRequest.Users...); err != nil {
+		return "", err
+	}
+
+	if _, err := s.roundService.AddRound(newId); err != nil {
 		return "", err
 	}
 
