@@ -30,6 +30,8 @@ func (s *Service) GetGames() ([]Game, error) {
 }
 
 func (s *Service) CreateGame(gameRequest *GameRequest) (string, error) {
+	// TODO: add transation
+
 	newId, err := InsertGame(
 		gameRequest.Title,
 		gameRequest.MaxPlayers,
