@@ -15,45 +15,19 @@ const (
 	CardStatusPlayed  CardStatus = 2 //played in round
 )
 
-type CardTemplate struct {
+type TemplateCardModel struct {
 	Id                int
 	PlaceholdersCount int
 	Text              string
 }
 
-type CardAnswer struct {
+type AnswerCardModel struct {
 	Id   int
 	Text string
 }
 
-func SelectCardAnswers() ([]CardAnswer, error) {
-	output := []CardAnswer{}
-
-	query := `SELECT id, text FROM answer_card`
-
-	rows, err := db.Conn.Query(context.Background(), query)
-	if err != nil {
-		return output, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var c CardAnswer
-		err := rows.Scan(
-			&c.Id,
-			&c.Text,
-		)
-		if err != nil {
-			return output, err
-		}
-		output = append(output, c)
-	}
-
-	return output, nil
-}
-
-func SelectUnusedCardAnswers(gameId string) ([]CardAnswer, error) {
-	output := []CardAnswer{}
+func SelectUnusedAnswerCards(gameId string) ([]AnswerCardModel, error) {
+	output := []AnswerCardModel{}
 
 	query := `SELECT 
 		ac.id,
@@ -64,11 +38,11 @@ func SelectUnusedCardAnswers(gameId string) ([]CardAnswer, error) {
 		NOT EXISTS(
 			SELECT guc.answer_card_id, guc.game_id  
 				FROM game_used_card guc 
-			WHERE guc.answer_card_id = ac.id AND guc.game_id = @gameId
+			WHERE guc.answer_card_id = ac.id AND guc.game_id = @game_id
 		)`
 
 	args := pgx.NamedArgs{
-		"gameId": gameId,
+		"game_id": gameId,
 	}
 
 	rows, err := db.Conn.Query(context.Background(), query, args)
@@ -78,7 +52,7 @@ func SelectUnusedCardAnswers(gameId string) ([]CardAnswer, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardAnswer
+		var c AnswerCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -92,21 +66,25 @@ func SelectUnusedCardAnswers(gameId string) ([]CardAnswer, error) {
 	return output, nil
 }
 
-func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]CardAnswer, error) {
-	output := []CardAnswer{}
+func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]AnswerCardModel, error) {
+	output := []AnswerCardModel{}
 
-	query := `SELECT 
-		ac.id, ac."text" 
-	FROM answer_card ac 
-	INNER JOIN game_used_card guc ON guc.answer_card_id = ac.id 
-	WHERE guc.game_id = @gameId
-		AND guc.user_id = @userId
-		AND guc.status = @status`
+	query := `SELECT
+		ac.id,
+		ac."text"
+	FROM
+		answer_card ac
+	JOIN game_used_card guc ON
+		guc.answer_card_id = ac.id
+	WHERE
+		guc.status = @status
+		AND guc.user_id = @user_id
+		AND guc.game_id = @game_id`
 
 	args := pgx.NamedArgs{
-		"gameId": gameId,
-		"userId": userId,
-		"status": status,
+		"status":  status,
+		"user_id": userId,
+		"game_id": gameId,
 	}
 
 	rows, err := db.Conn.Query(context.Background(), query, args)
@@ -116,7 +94,7 @@ func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]C
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardAnswer
+		var c AnswerCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -130,8 +108,8 @@ func SelectUsedAnswerCards(gameId string, userId string, status CardStatus) ([]C
 	return output, nil
 }
 
-func SelectCardTemplates() ([]CardTemplate, error) {
-	output := []CardTemplate{}
+func SelectCardTemplates() ([]TemplateCardModel, error) {
+	output := []TemplateCardModel{}
 
 	query := `SELECT id, text, placeholders_count FROM template_card`
 
@@ -142,7 +120,7 @@ func SelectCardTemplates() ([]CardTemplate, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardTemplate
+		var c TemplateCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -157,8 +135,8 @@ func SelectCardTemplates() ([]CardTemplate, error) {
 	return output, nil
 }
 
-func SelectUnusedCardTemplates(gameId string) ([]CardTemplate, error) {
-	output := []CardTemplate{}
+func SelectUnusedCardTemplates(gameId string) ([]TemplateCardModel, error) {
+	output := []TemplateCardModel{}
 
 	query := `SELECT
 		tc.id, tc.text, tc.placeholders_count
@@ -167,11 +145,11 @@ func SelectUnusedCardTemplates(gameId string) ([]CardTemplate, error) {
 	WHERE NOT EXISTS(
 				SELECT r.template_card_id, r.game_id 
 					FROM round r 
-					WHERE r.template_card_id = tc.id AND r.game_id = @gameId
+					WHERE r.template_card_id = tc.id AND r.game_id = @game_id
 	)`
 
 	args := pgx.NamedArgs{
-		"gameId": gameId,
+		"game_id": gameId,
 	}
 
 	rows, err := db.Conn.Query(context.Background(), query, args)
@@ -181,7 +159,7 @@ func SelectUnusedCardTemplates(gameId string) ([]CardTemplate, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var c CardTemplate
+		var c TemplateCardModel
 		err := rows.Scan(
 			&c.Id,
 			&c.Text,
@@ -229,14 +207,14 @@ func InsertCardBatchUsed(gameId string, userId string, cardIds ...int) error {
 
 	query := `INSERT INTO game_used_card
 		(game_id, answer_card_id, status, user_id)
-		VALUES (@gameId, @answerCardId, @status, @userId)`
+		VALUES (@game_id, @answer_card_id, @status, @user_id)`
 
 	for _, cardId := range cardIds {
 		batch.Queue(query, pgx.NamedArgs{
-			"gameId":       gameId,
-			"answerCardId": cardId,
-			"status":       CardStatusInUse,
-			"userId":       userId,
+			"game_id":        gameId,
+			"answer_card_id": cardId,
+			"status":         CardStatusInUse,
+			"user_id":        userId,
 		})
 	}
 
@@ -251,4 +229,44 @@ func InsertCardBatchUsed(gameId string, userId string, cardIds ...int) error {
 	}
 
 	return nil
+}
+
+func InsertPlayedCard(answerId int, usedCardId int, placeholderIndex int) error {
+	query := `INSERT INTO game_user_played_card
+		(user_answer_id, game_used_card_id, placeholder_index)
+		VALUES(@user_answer_id, @game_used_card_id, @placeholder_index)`
+
+	args := pgx.NamedArgs{
+		"user_answer_id":    answerId,
+		"game_used_card_id": usedCardId,
+		"placeholder_index": placeholderIndex,
+	}
+
+	_, err := db.Conn.Exec(
+		context.Background(),
+		query,
+		args,
+	)
+	return err
+}
+
+func UpdateUsedCardStatus(usedCardId int, status CardStatus) error {
+	query := `UPDATE
+		game_used_card
+	SET
+		status = @status
+	WHERE
+		id = @id`
+
+	args := pgx.NamedArgs{
+		"id":     usedCardId,
+		"status": status,
+	}
+
+	_, err := db.Conn.Exec(
+		context.Background(),
+		query,
+		args,
+	)
+	return err
 }

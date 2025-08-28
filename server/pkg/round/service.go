@@ -38,6 +38,9 @@ func (s *Service) AddRound(gameId string) (int, error) {
 		return 0, err
 	}
 
+	// TODO: fille all of the players' card hands
+
+	// TODO: check last position for better validation
 	newId, err := Insert(
 		len(rounds)+1,
 		gameId,

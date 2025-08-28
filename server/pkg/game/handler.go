@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/lardira/wicked-wit/pkg/card"
 	"github.com/lardira/wicked-wit/pkg/response"
 	"github.com/lardira/wicked-wit/pkg/round"
 )
@@ -31,6 +32,7 @@ func Router() chi.Router {
 	r.Delete("/{id}", handler.DeleteGame)
 
 	r.Mount("/{gameId}/rounds", round.Router())
+	r.Mount("/{gameId}/cards", card.Router())
 
 	return r
 }
