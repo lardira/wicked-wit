@@ -1,6 +1,6 @@
-package game
+package entity
 
-import "github.com/lardira/wicked-wit/pkg/response"
+import "github.com/lardira/wicked-wit/internal/helper/response"
 
 type GameStatus uint
 

@@ -1,4 +1,4 @@
-package game
+package repository
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
-	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
 type GameModel struct {

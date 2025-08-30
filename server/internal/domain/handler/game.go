@@ -1,28 +1,28 @@
-package game
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/lardira/wicked-wit/pkg/card"
-	"github.com/lardira/wicked-wit/pkg/response"
-	"github.com/lardira/wicked-wit/pkg/round"
+	"github.com/lardira/wicked-wit/internal/domain/entity"
+	"github.com/lardira/wicked-wit/internal/domain/interfaces"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
-type Handler struct {
-	gameService *Service
+type gameHandler struct {
+	gameService interfaces.GameService
 }
 
-func NewGameHandler(gameService *Service) *Handler {
-	return &Handler{
+func NewGameHandler(gameService interfaces.GameService) *gameHandler {
+	return &gameHandler{
 		gameService: gameService,
 	}
 }
 
-func Router() chi.Router {
+func GameRouter(gameService interfaces.GameService, cardService interfaces.CardService, roundService interfaces.RoundService) chi.Router {
 	handler := NewGameHandler(
-		NewGameService(round.NewRoundService(&card.Service{})),
+		gameService,
 	)
 
 	r := chi.NewRouter()
@@ -31,13 +31,13 @@ func Router() chi.Router {
 	r.Post("/", handler.CreateGame)
 	r.Delete("/{id}", handler.DeleteGame)
 
-	r.Mount("/{gameId}/rounds", round.Router())
-	r.Mount("/{gameId}/cards", card.Router())
+	r.Mount("/{gameId}/rounds", RoundRouter(roundService))
+	r.Mount("/{gameId}/cards", CardRouter(cardService))
 
 	return r
 }
 
-func (h *Handler) GetGames(w http.ResponseWriter, r *http.Request) {
+func (h *gameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	payload, err := h.gameService.GetGames()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -50,8 +50,8 @@ func (h *Handler) GetGames(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) CreateGame(w http.ResponseWriter, r *http.Request) {
-	var game GameRequest
+func (h *gameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
+	var game entity.GameRequest
 	err := json.NewDecoder(r.Body).Decode(&game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -72,7 +72,7 @@ func (h *Handler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	response.SimpleData(w, newId)
 }
 
-func (h *Handler) DeleteGame(w http.ResponseWriter, r *http.Request) {
+func (h *gameHandler) DeleteGame(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

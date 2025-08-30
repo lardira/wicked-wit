@@ -1,4 +1,4 @@
-package user
+package handler
 
 import (
 	"encoding/json"
@@ -10,7 +10,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/internal/domain/entity"
+	"github.com/lardira/wicked-wit/internal/domain/interfaces"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
 const (
@@ -22,19 +24,19 @@ var (
 	validImgFileExtensions = []string{".jpg", ".jpeg", ".png", ".webp"}
 )
 
-type Handler struct {
-	userService *Service
+type userHandler struct {
+	userService interfaces.UserService
 }
 
-func NewHandler(userService *Service) *Handler {
-	return &Handler{
+func NewHandler(userService interfaces.UserService) *userHandler {
+	return &userHandler{
 		userService: userService,
 	}
 }
 
-func Router() chi.Router {
+func UserRouter(userService interfaces.UserService) chi.Router {
 	handler := NewHandler(
-		&Service{},
+		userService,
 	)
 
 	r := chi.NewRouter()
@@ -47,7 +49,7 @@ func Router() chi.Router {
 	return r
 }
 
-func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if err := uuid.Validate(id); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -66,8 +68,8 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var userRequest UserRequest
+func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var userRequest entity.UserRequest
 	err := json.NewDecoder(r.Body).Decode(&userRequest)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -99,7 +101,7 @@ func validateUploadedFileHeader(header *multipart.FileHeader) error {
 	return nil
 }
 
-func (h *Handler) UpdateProfileImage(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) UpdateProfileImage(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		// TODO: check if user exists
@@ -138,7 +140,7 @@ func (h *Handler) UpdateProfileImage(w http.ResponseWriter, r *http.Request) {
 	response.SimpleData(w, fileUrl)
 }
 
-func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

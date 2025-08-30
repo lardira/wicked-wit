@@ -1,4 +1,4 @@
-package round
+package handler
 
 import (
 	"encoding/json"
@@ -7,23 +7,23 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/lardira/wicked-wit/pkg/card"
-	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/internal/domain/interfaces"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
-type Handler struct {
-	roundService *Service
+type roundHandler struct {
+	roundService interfaces.RoundService
 }
 
-func NewRoundHandler(roundService *Service) *Handler {
-	return &Handler{
+func NewRoundHandler(roundService interfaces.RoundService) *roundHandler {
+	return &roundHandler{
 		roundService: roundService,
 	}
 }
 
-func Router() chi.Router {
+func RoundRouter(roundService interfaces.RoundService) chi.Router {
 	handler := NewRoundHandler(
-		NewRoundService(&card.Service{}),
+		roundService,
 	)
 
 	r := chi.NewRouter()
@@ -35,7 +35,7 @@ func Router() chi.Router {
 	return r
 }
 
-func (h *Handler) GetRounds(w http.ResponseWriter, r *http.Request) {
+func (h *roundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
 	gameId := chi.URLParam(r, "gameId")
 	if gameId == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -54,7 +54,7 @@ func (h *Handler) GetRounds(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) AddRound(w http.ResponseWriter, r *http.Request) {
+func (h *roundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
 	gameId := (chi.URLParam(r, "gameId"))
 	if err := uuid.Validate(gameId); err != nil {
 		response.SimpleError(w, err, http.StatusBadRequest)
@@ -70,7 +70,7 @@ func (h *Handler) AddRound(w http.ResponseWriter, r *http.Request) {
 	response.SimpleData(w, newId)
 }
 
-func (h *Handler) DeleteRound(w http.ResponseWriter, r *http.Request) {
+func (h *roundHandler) DeleteRound(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

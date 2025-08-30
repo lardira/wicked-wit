@@ -1,6 +1,6 @@
-package round
+package entity
 
-import "github.com/lardira/wicked-wit/pkg/response"
+import "github.com/lardira/wicked-wit/internal/helper/response"
 
 type RoundStatus uint
 

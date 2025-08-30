@@ -1,4 +1,4 @@
-package card
+package entity
 
 type Card struct {
 	Id   int    `json:"id"`

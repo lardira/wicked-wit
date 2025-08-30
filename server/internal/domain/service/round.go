@@ -1,30 +1,33 @@
-package round
+package service
 
 import (
-	"github.com/lardira/wicked-wit/pkg/card"
-	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/internal/domain/entity"
+	"github.com/lardira/wicked-wit/internal/domain/interfaces"
+	"github.com/lardira/wicked-wit/internal/domain/repository"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
-type Service struct {
-	cardService *card.Service
+type roundService struct {
+	cardService interfaces.CardService
+	gameService interfaces.GameService
 }
 
-func NewRoundService(cardService *card.Service) *Service {
-	return &Service{
+func NewRoundService(cardService interfaces.CardService) *roundService {
+	return &roundService{
 		cardService: cardService,
 	}
 }
 
-func (s *Service) GetRounds(gameId string) ([]Round, error) {
-	rounds := []Round{}
+func (s *roundService) GetRounds(gameId string) ([]entity.Round, error) {
+	rounds := []entity.Round{}
 
-	roundModels, err := Select(gameId)
+	roundModels, err := repository.SelectRounds(gameId)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, model := range roundModels {
-		round := Round{
+		round := entity.Round{
 			Id:       model.Id,
 			Position: model.Position,
 			GameId:   model.GameId,
@@ -41,7 +44,8 @@ func (s *Service) GetRounds(gameId string) ([]Round, error) {
 	return rounds, nil
 }
 
-func (s *Service) AddRound(gameId string) (int, error) {
+func (s *roundService) AddRound(gameId string) (int, error) {
+
 	rounds, err := s.GetRounds(gameId)
 	if err != nil {
 		return 0, err
@@ -60,7 +64,7 @@ func (s *Service) AddRound(gameId string) (int, error) {
 	}
 
 	// TODO: check last position for better validation
-	newId, err := Insert(
+	newId, err := repository.InsertRound(
 		position,
 		gameId,
 		templateCard.Id,
@@ -74,6 +78,6 @@ func (s *Service) AddRound(gameId string) (int, error) {
 	return newId, nil
 }
 
-func (s *Service) DeleteRound(id int) {
-	Delete(id)
+func (s *roundService) DeleteRound(id int) {
+	repository.DeleteRound(id)
 }
