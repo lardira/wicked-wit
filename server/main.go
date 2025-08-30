@@ -10,9 +10,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/lardira/wicked-wit/internal/db"
+	"github.com/lardira/wicked-wit/internal/domain/handler"
+	"github.com/lardira/wicked-wit/internal/domain/service"
+
 	"github.com/lardira/wicked-wit/internal/s3"
-	"github.com/lardira/wicked-wit/pkg/game"
-	"github.com/lardira/wicked-wit/pkg/user"
 )
 
 const (
@@ -49,8 +50,13 @@ func main() {
 
 	r.Use(middleware.Logger)
 
-	r.Mount("/games", game.Router())
-	r.Mount("/users", user.Router())
+	cardService := service.NewCardService()
+	roundService := service.NewRoundService()
+	gameService := service.NewGameService(roundService, cardService)
+	userService := service.NewUserService()
+
+	r.Mount("/games", handler.GameRouter(gameService, cardService, roundService))
+	r.Mount("/users", handler.UserRouter(userService))
 
 	log.Println("the server is running")
 	if err := http.ListenAndServe(":8080", r); err != nil {

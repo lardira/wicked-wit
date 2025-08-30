@@ -1,27 +1,29 @@
-package card
+package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/internal/domain/entity"
+	"github.com/lardira/wicked-wit/internal/domain/interfaces"
+	"github.com/lardira/wicked-wit/internal/domain/service"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
-type Handler struct {
-	cardService *Service
+type cardHandler struct {
+	cardService interfaces.CardService
 }
 
-func NewCardHandler(cardService *Service) *Handler {
-	return &Handler{
+func NewCardHandler(cardService interfaces.CardService) *cardHandler {
+	return &cardHandler{
 		cardService: cardService,
 	}
 }
 
-func Router() chi.Router {
+func CardRouter(cardService interfaces.CardService) chi.Router {
 	handler := NewCardHandler(
-		&Service{},
+		service.NewCardService(),
 	)
 
 	r := chi.NewRouter()
@@ -32,7 +34,7 @@ func Router() chi.Router {
 	return r
 }
 
-func (h *Handler) GetCards(w http.ResponseWriter, r *http.Request) {
+func (h *cardHandler) GetCards(w http.ResponseWriter, r *http.Request) {
 	gameId := chi.URLParam(r, "gameId")
 	if gameId == "" {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -44,8 +46,6 @@ func (h *Handler) GetCards(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "userId must not be empty", http.StatusBadRequest)
 		return
 	}
-
-	fmt.Println(userId)
 
 	cards, err := h.cardService.GetCards(gameId, userId)
 	if err != nil {
@@ -59,8 +59,8 @@ func (h *Handler) GetCards(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) PlayCards(w http.ResponseWriter, r *http.Request) {
-	var req PlayCardRequest
+func (h *cardHandler) PlayCards(w http.ResponseWriter, r *http.Request) {
+	var req entity.PlayCardRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

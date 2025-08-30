@@ -1,4 +1,4 @@
-package round
+package repository
 
 import (
 	"context"
@@ -6,7 +6,16 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lardira/wicked-wit/internal/db"
-	"github.com/lardira/wicked-wit/pkg/response"
+	"github.com/lardira/wicked-wit/internal/helper/response"
+)
+
+type RoundStatus uint
+
+const (
+	RoundStatusStarted            = 0
+	RoundStatusVoting             = 1
+	RoundStatusWinnerPresentation = 2
+	RoundStatusEnded              = 3
 )
 
 type RoundModel struct {
@@ -18,7 +27,7 @@ type RoundModel struct {
 	response.TimedModel
 }
 
-func Select(gameId string) ([]RoundModel, error) {
+func SelectRounds(gameId string) ([]RoundModel, error) {
 	output := []RoundModel{}
 
 	query := `SELECT
@@ -58,7 +67,7 @@ func Select(gameId string) ([]RoundModel, error) {
 	return output, nil
 }
 
-func Insert(position int, gameId string, templateId int) (int, error) {
+func InsertRound(position int, gameId string, templateId int) (int, error) {
 	query := `INSERT INTO round 
 		(position, game_id, template_card_id) 
 		VALUES (@position, @game_id, @template_card_id)`
@@ -89,7 +98,7 @@ func Insert(position int, gameId string, templateId int) (int, error) {
 	return newRoundId, nil
 }
 
-func Delete(id int) {
+func DeleteRound(id int) {
 	query := "DELETE FROM round WHERE id = $1"
 	db.Conn.Exec(context.Background(), query, id)
 }

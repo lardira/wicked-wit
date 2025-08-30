@@ -1,4 +1,4 @@
-package user
+package service
 
 import (
 	"context"
@@ -7,20 +7,26 @@ import (
 	"os"
 	"path"
 
+	"github.com/lardira/wicked-wit/internal/domain/entity"
+	"github.com/lardira/wicked-wit/internal/domain/repository"
+	"github.com/lardira/wicked-wit/internal/helper/response"
 	"github.com/lardira/wicked-wit/internal/s3"
-	"github.com/lardira/wicked-wit/pkg/response"
 	"github.com/minio/minio-go/v7"
 )
 
-type Service struct{}
+type userService struct{}
 
-func (s *Service) GetUser(id string) (*User, error) {
-	userModel, err := SelectUser(id)
+func NewUserService() *userService {
+	return &userService{}
+}
+
+func (s *userService) GetUser(id string) (*entity.User, error) {
+	userModel, err := repository.SelectUser(id)
 	if err != nil {
 		return nil, err
 	}
 
-	user := User{
+	user := entity.User{
 		Id:       userModel.Id,
 		Username: userModel.Username,
 		Timed:    response.TimedFromModel(&userModel.TimedModel),
@@ -33,8 +39,8 @@ func (s *Service) GetUser(id string) (*User, error) {
 	return &user, err
 }
 
-func (s *Service) CreateUser(userRequest *UserRequest) (string, error) {
-	newId, err := InsertUser(
+func (s *userService) CreateUser(userRequest *entity.UserRequest) (string, error) {
+	newId, err := repository.InsertUser(
 		userRequest.Username,
 		userRequest.Password,
 	)
@@ -45,7 +51,7 @@ func (s *Service) CreateUser(userRequest *UserRequest) (string, error) {
 	return newId, nil
 }
 
-func (s *Service) UpdateProfileImage(id string, file *multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func (s *userService) UpdateProfileImage(id string, file *multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	fileName := id + path.Ext(fileHeader.Filename)
 	fileUrl, _ := url.JoinPath(s3.Client.Url, s3.Client.DefaultBucket, fileName)
 
@@ -61,13 +67,13 @@ func (s *Service) UpdateProfileImage(id string, file *multipart.File, fileHeader
 		return "", err
 	}
 
-	if err := UpdateUserImg(id, fileUrl); err != nil {
+	if err := repository.UpdateUserImg(id, fileUrl); err != nil {
 		return "", err
 	}
 
 	return fileName, nil
 }
 
-func (s *Service) DeleteUser(id string) {
-	DeleteUser(id)
+func (s *userService) DeleteUser(id string) {
+	repository.DeleteUser(id)
 }

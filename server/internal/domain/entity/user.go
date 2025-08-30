@@ -1,6 +1,6 @@
-package user
+package entity
 
-import "github.com/lardira/wicked-wit/pkg/response"
+import "github.com/lardira/wicked-wit/internal/helper/response"
 
 type User struct {
 	Id         string  `json:"id"`
