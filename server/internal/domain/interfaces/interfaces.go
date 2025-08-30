@@ -8,8 +8,10 @@ import (
 
 type GameService interface {
 	GetGames() ([]entity.Game, error)
+	GetGame(gameId string) (entity.Game, error)
 	CreateGame(*entity.GameRequest) (string, error)
 	DeleteGame(string)
+	AppendRound(gameId string, templateCardid int) (int, error)
 	FillUserHand(gameId string, userId string) error
 }
 

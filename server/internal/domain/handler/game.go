@@ -28,6 +28,7 @@ func GameRouter(gameService interfaces.GameService, cardService interfaces.CardS
 	r := chi.NewRouter()
 
 	r.Get("/", handler.GetGames)
+	r.Get("/{id}", handler.GetGame)
 	r.Post("/", handler.CreateGame)
 	r.Delete("/{id}", handler.DeleteGame)
 
@@ -39,6 +40,25 @@ func GameRouter(gameService interfaces.GameService, cardService interfaces.CardS
 
 func (h *gameHandler) GetGames(w http.ResponseWriter, r *http.Request) {
 	payload, err := h.gameService.GetGames()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *gameHandler) GetGame(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	payload, err := h.gameService.GetGame(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

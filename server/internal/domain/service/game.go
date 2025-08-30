@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/lardira/wicked-wit/internal/domain/entity"
 	"github.com/lardira/wicked-wit/internal/domain/interfaces"
 	"github.com/lardira/wicked-wit/internal/domain/repository"
@@ -33,18 +35,42 @@ func (s *gameService) GetGames() ([]entity.Game, error) {
 
 	for _, model := range gameModels {
 		game := entity.Game{
-			Id:         model.Id,
-			Title:      model.Title,
-			MaxPlayers: model.MaxPlayers,
-			MaxRound:   model.MaxRound,
-			UserHostId: model.UserHostId,
-			Timed:      response.TimedFromModel(&model.TimedModel),
+			Id:           model.Id,
+			Title:        model.Title,
+			MaxPlayers:   model.MaxPlayers,
+			MaxRound:     model.MaxRound,
+			CurrentRound: model.CurrentRound,
+			Status:       model.Status,
+			UserHostId:   model.UserHostId,
+			Timed:        response.TimedFromModel(&model.TimedModel),
 		}
 
 		games = append(games, game)
 	}
 
 	return games, nil
+}
+
+func (s *gameService) GetGame(gameId string) (entity.Game, error) {
+
+	model, err := repository.SelectGame(gameId)
+	if err != nil {
+		return entity.Game{}, err
+	}
+
+	game := entity.Game{
+		Id:           model.Id,
+		Title:        model.Title,
+		MaxPlayers:   model.MaxPlayers,
+		MaxRound:     model.MaxRound,
+		CurrentRound: model.CurrentRound,
+		Status:       model.Status,
+		UserHostId:   model.UserHostId,
+		Timed:        response.TimedFromModel(&model.TimedModel),
+	}
+
+	return game, nil
+
 }
 
 func (s *gameService) FillUserHand(gameId string, userId string) error {
@@ -81,6 +107,27 @@ func (s *gameService) FillUserHand(gameId string, userId string) error {
 	return nil
 }
 
+func (s *gameService) AppendRound(gameId string, templateCardid int) (roundId int, err error) {
+	currentGame, err := s.GetGame(gameId)
+	if err != nil {
+		return 0, err
+	} else if currentGame.CurrentRound >= currentGame.MaxRound {
+		return 0, errors.New("max round reached")
+	}
+
+	templateCard, err := s.cardService.GetRandomTemplateCard(currentGame.Id)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := s.roundService.AddRound(currentGame.Id, templateCard.Id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func (s *gameService) CreateGame(gameRequest *entity.GameRequest) (string, error) {
 	// TODO: add transaction
 
@@ -95,15 +142,6 @@ func (s *gameService) CreateGame(gameRequest *entity.GameRequest) (string, error
 	}
 
 	if err := repository.BatchInsertGameUser(newId, gameRequest.Users...); err != nil {
-		return "", err
-	}
-
-	templateCard, err := s.cardService.GetRandomTemplateCard(newId)
-	if err != nil {
-		return "", err
-	}
-
-	if _, err := s.roundService.AddRound(newId, templateCard.Id); err != nil {
 		return "", err
 	}
 

@@ -9,6 +9,15 @@ import (
 	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
+type RoundStatus uint
+
+const (
+	RoundStatusStarted            = 0
+	RoundStatusVoting             = 1
+	RoundStatusWinnerPresentation = 2
+	RoundStatusEnded              = 3
+)
+
 type RoundModel struct {
 	Id       int
 	WinnerId sql.NullString
