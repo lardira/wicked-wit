@@ -2,20 +2,15 @@ package service
 
 import (
 	"github.com/lardira/wicked-wit/internal/domain/entity"
-	"github.com/lardira/wicked-wit/internal/domain/interfaces"
 	"github.com/lardira/wicked-wit/internal/domain/repository"
 	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
 type roundService struct {
-	cardService interfaces.CardService
-	gameService interfaces.GameService
 }
 
-func NewRoundService(cardService interfaces.CardService) *roundService {
-	return &roundService{
-		cardService: cardService,
-	}
+func NewRoundService() *roundService {
+	return &roundService{}
 }
 
 func (s *roundService) GetRounds(gameId string) ([]entity.Round, error) {
@@ -44,7 +39,7 @@ func (s *roundService) GetRounds(gameId string) ([]entity.Round, error) {
 	return rounds, nil
 }
 
-func (s *roundService) AddRound(gameId string) (int, error) {
+func (s *roundService) AddRound(gameId string, templateCardId int) (int, error) {
 
 	rounds, err := s.GetRounds(gameId)
 	if err != nil {
@@ -58,22 +53,15 @@ func (s *roundService) AddRound(gameId string) (int, error) {
 		position = len(rounds) + 1
 	}
 
-	templateCard, err := s.cardService.GetRandomTemplateCard(gameId)
-	if err != nil {
-		return 0, err
-	}
-
 	// TODO: check last position for better validation
 	newId, err := repository.InsertRound(
 		position,
 		gameId,
-		templateCard.Id,
+		templateCardId,
 	)
 	if err != nil {
 		return 0, err
 	}
-
-	// TODO: fill all of the players' card hands
 
 	return newId, nil
 }

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -47,8 +46,6 @@ func (h *cardHandler) GetCards(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "userId must not be empty", http.StatusBadRequest)
 		return
 	}
-
-	fmt.Println(userId)
 
 	cards, err := h.cardService.GetCards(gameId, userId)
 	if err != nil {

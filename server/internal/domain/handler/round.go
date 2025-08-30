@@ -6,9 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/lardira/wicked-wit/internal/domain/interfaces"
-	"github.com/lardira/wicked-wit/internal/helper/response"
 )
 
 type roundHandler struct {
@@ -29,7 +27,6 @@ func RoundRouter(roundService interfaces.RoundService) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/", handler.GetRounds)
-	r.Post("/", handler.AddRound)
 	r.Delete("/{id}", handler.DeleteRound)
 
 	return r
@@ -52,22 +49,6 @@ func (h *roundHandler) GetRounds(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-func (h *roundHandler) AddRound(w http.ResponseWriter, r *http.Request) {
-	gameId := (chi.URLParam(r, "gameId"))
-	if err := uuid.Validate(gameId); err != nil {
-		response.SimpleError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	newId, err := h.roundService.AddRound(gameId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	response.SimpleData(w, newId)
 }
 
 func (h *roundHandler) DeleteRound(w http.ResponseWriter, r *http.Request) {

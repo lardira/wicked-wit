@@ -51,8 +51,8 @@ func main() {
 	r.Use(middleware.Logger)
 
 	cardService := service.NewCardService()
-	roundService := service.NewRoundService(cardService)
-	gameService := service.NewGameService(roundService)
+	roundService := service.NewRoundService()
+	gameService := service.NewGameService(roundService, cardService)
 	userService := service.NewUserService()
 
 	r.Mount("/games", handler.GameRouter(gameService, cardService, roundService))

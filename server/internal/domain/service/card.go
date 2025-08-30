@@ -13,6 +13,10 @@ func NewCardService() *cardService {
 }
 
 func (s *cardService) UseCards(gameId string, userId string, cardIds ...int) error {
+	if len(cardIds) == 0 {
+		return nil
+	}
+
 	return repository.BatchInsertCardUsed(gameId, userId, cardIds...)
 }
 
@@ -56,6 +60,24 @@ func (s *cardService) PlayCards(roundId int, userId string, cardIds ...int) (int
 	}
 
 	return answerId, nil
+}
+
+func (s *cardService) GetUnusedAnswerCards(gameId string) ([]entity.Card, error) {
+	cards := []entity.Card{}
+
+	cardModels, err := repository.SelectUnusedAnswerCards(gameId)
+	if err != nil {
+		return nil, nil
+	}
+
+	for _, model := range cardModels {
+		cards = append(cards, entity.Card{
+			Id:   model.Id,
+			Text: model.Text,
+		})
+	}
+
+	return cards, nil
 }
 
 func (s *cardService) GetUnusedTemplateCards(gameId string) ([]entity.TemplateCard, error) {

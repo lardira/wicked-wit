@@ -10,12 +10,13 @@ type GameService interface {
 	GetGames() ([]entity.Game, error)
 	CreateGame(*entity.GameRequest) (string, error)
 	DeleteGame(string)
+	FillUserHand(gameId string, userId string) error
 }
 
 type RoundService interface {
-	GetRounds(string) ([]entity.Round, error)
-	AddRound(string) (int, error)
-	DeleteRound(int)
+	GetRounds(gameId string) ([]entity.Round, error)
+	AddRound(gameId string, templateCardId int) (int, error)
+	DeleteRound(id int)
 }
 
 type CardService interface {
@@ -23,6 +24,7 @@ type CardService interface {
 	UseCards(gameId string, userId string, cardIds ...int) error
 	PlayCards(roundId int, userId string, cardIds ...int) (int, error)
 	GetUnusedTemplateCards(gameId string) ([]entity.TemplateCard, error)
+	GetUnusedAnswerCards(gameId string) ([]entity.Card, error)
 	GetRandomTemplateCard(gameId string) (*entity.TemplateCard, error)
 }
 
